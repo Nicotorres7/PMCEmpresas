@@ -1,0 +1,2 @@
+Sillón,257398.0,Hierro:20,Madera:100,Lana:300
+Cama,2593838.0,Hierro:150,Madera:500,Lana:1000

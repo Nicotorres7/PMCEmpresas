@@ -1,0 +1,3 @@
+Sillón,150
+Cama,400
+Cama,720

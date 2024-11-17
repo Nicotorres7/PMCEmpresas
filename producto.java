@@ -1,21 +1,22 @@
 package PMCJAVA;
 
-import java.util.List;
+import java.util.HashMap;
 
 public class producto {
 
     private String nombre;
     private float precio;
-    private List<materiaPrima> materiasPrimas;
+    private HashMap<materiaPrima, Integer> materiasPrimas;
     private float costo;
 
-    public producto(String nombre, float precio, List<materiaPrima> materiasPrimas) {
+    public producto(String nombre, float precio, HashMap<materiaPrima, Integer> materiasPrimas) {
         this.nombre = nombre;
         this.precio = precio;
         this.materiasPrimas = materiasPrimas;
         this.costo = 0;
-        for (materiaPrima materiaPrima : materiasPrimas) {
-            this.costo += materiaPrima.getPrecioGramo();
+        for (int i = 0; i < materiasPrimas.size(); i++) {
+            materiaPrima materiaPrima = (materiaPrima) materiasPrimas.keySet().toArray()[i];
+            this.costo += materiaPrima.getPrecioGramo() * materiasPrimas.get(materiaPrima);
         }
     }
 
@@ -27,7 +28,7 @@ public class producto {
         return precio;
     }
 
-    public List<materiaPrima> getMateriasPrimas() {
+    public HashMap<materiaPrima, Integer> getMateriasPrimas() {
         return materiasPrimas;
     }
 
@@ -35,8 +36,8 @@ public class producto {
         return costo;
     }
 
-    public void addMateriaPrima(materiaPrima materiaPrima) {
-        this.materiasPrimas.add(materiaPrima);
+    public void addMateriaPrima(materiaPrima materiaPrima, int cantidad) {
+        this.materiasPrimas.put(materiaPrima, cantidad);
         this.costo += materiaPrima.getPrecioGramo();
     }
 
@@ -45,4 +46,3 @@ public class producto {
         return nombre;  // Mostrar el nombre en los ComboBox
     }
 }
-

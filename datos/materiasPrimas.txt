@@ -1,0 +1,5 @@
+Madera,115.0
+Hierro,1286.0
+Cobre,563.8
+Lana,523.25
+Litio,1704.5
