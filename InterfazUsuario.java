@@ -45,7 +45,7 @@ public class InterfazUsuario extends JFrame {
         loadInformation();
 
         setTitle("Gestión de Producción");
-        setSize(600, 600);
+        setSize(1000, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         getContentPane().setBackground(Color.decode("#f0f8ff"));
@@ -71,15 +71,21 @@ public class InterfazUsuario extends JFrame {
         actualizarMateriasPrimas();
         actualizarProductos();
         actualizarOrdenes();
-    }
+        }
 
-    private JPanel crearPanelMateriasPrimas() {
+        private JTable materiasTable;
+        private DefaultTableModel materiasTableModel;
+
+        private JPanel crearPanelMateriasPrimas() {
         JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setLayout(new BorderLayout());
         panel.setBackground(Color.white);
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Márgenes
 
+        // Panel de entrada de materias primas
         JPanel inputPanel = new JPanel();
-        inputPanel.setLayout(new FlowLayout());
+        inputPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10)); // Alineación y espaciado
+        inputPanel.setBackground(Color.white);
 
         JTextField nombreMateriaField = new JTextField(10);
         JTextField precioGramoField = new JTextField(10);
@@ -89,11 +95,53 @@ public class InterfazUsuario extends JFrame {
         for (materiaPrima m : materiasPrimas) {
             materiasComboBoxModel.addElement(m);
         }
-        JComboBox<materiaPrima> materiasComboBox = new JComboBox<>(materiasComboBoxModel);
-        materiasArea = new JTextArea(10, 30);
-        materiasArea.setEditable(false);
-        JScrollPane scrollPane = new JScrollPane(materiasArea);
-        scrollPane.setPreferredSize(new Dimension(500, 150));
+
+        // Definir el modelo de la tabla
+        String[] columnNames = {"Nombre", "Precio por Gramo"};
+        materiasTableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+            return false; // Hacer que las celdas no sean editables
+            }
+        };
+
+        // Crear la tabla y configurarla
+        materiasTable = new JTable(materiasTableModel);
+        materiasTable.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        materiasTable.setRowHeight(25);
+
+        // Configurar encabezados
+        JTableHeader header = materiasTable.getTableHeader();
+        header.setFont(new Font("SansSerif", Font.BOLD, 16));
+
+        // Ajustar el ancho de las columnas
+        for (int i = 0; i < columnNames.length; i++) {
+            TableColumn column = materiasTable.getColumnModel().getColumn(i);
+            column.setPreferredWidth(200);
+        }
+
+        // Alternar colores de filas
+        materiasTable.setFillsViewportHeight(true);
+        materiasTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                                   boolean isSelected, boolean hasFocus,
+                                   int row, int column) {
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            if (!isSelected) {
+                if (row % 2 == 0) {
+                c.setBackground(new Color(240, 240, 240));
+                } else {
+                c.setBackground(Color.white);
+                }
+            }
+            return c;
+            }
+        });
+
+        // Crear el JScrollPane para la tabla
+        JScrollPane tableScrollPane = new JScrollPane(materiasTable);
+        tableScrollPane.setPreferredSize(new Dimension(600, 400));
 
         agregarMateriaButton.addActionListener(e -> {
             String nombre = nombreMateriaField.getText();
@@ -106,83 +154,158 @@ public class InterfazUsuario extends JFrame {
             actualizarMateriasPrimas();
         });
 
+        // Agregar componentes al panel de entrada
         inputPanel.add(new JLabel("Nombre:"));
         inputPanel.add(nombreMateriaField);
         inputPanel.add(new JLabel("Precio por gramo:"));
         inputPanel.add(precioGramoField);
         inputPanel.add(agregarMateriaButton);
 
-        panel.add(inputPanel);
-        panel.add(new JLabel("Materias Primas:"));
-        panel.add(scrollPane);
+        // Agregar el panel de entrada y la tabla al panel principal
+        panel.add(inputPanel, BorderLayout.NORTH);
+        panel.add(new JLabel("Materias Primas Registradas:"), BorderLayout.CENTER);
+        panel.add(tableScrollPane, BorderLayout.SOUTH);
 
         return panel;
-    }
-
-    private JPanel crearPanelProductos() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(Color.white);
-
-        JPanel inputPanel = new JPanel();
-        inputPanel.setLayout(new FlowLayout());
-
-        JTextField nombreProductoField = new JTextField(10);
-        JTextField precioProductoField = new JTextField(10);
-        JButton agregarProductoButton = new JButton("Agregar Producto");
-
-        productosComboBoxModel = new DefaultComboBoxModel<>();
-        for (producto p : productos) {
-            productosComboBoxModel.addElement(p);
         }
-        JComboBox<producto> productosComboBox = new JComboBox<>(productosComboBoxModel);
+
+        private void actualizarMateriasPrimas() {
+        // Limpiar la tabla
+        materiasTableModel.setRowCount(0);
+
+        // Llenar la tabla con las materias primas actualizadas
+        DecimalFormat decimalFormat = new DecimalFormat("#,###");
+        for (materiaPrima m : materiasPrimas) {
+            materiasTableModel.addRow(new Object[]{m.getNombre(), '$' + decimalFormat.format(m.getPrecioGramo())});
+        }
+
+        // Guardar materias primas en archivo
+        File materiasFile = new File("datos/materiasPrimas.txt");
+        try (PrintWriter pw = new PrintWriter(new FileOutputStream(materiasFile, false))) {
+            for (materiaPrima m : materiasPrimas) {
+            pw.println(m.getNombre() + "," + m.getPrecioGramo());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("Error al guardar materias primas.");
+        }
+        }
+
+        private JTable productosTable;
+        private DefaultTableModel productosTableModel;
+
+        private JPanel crearPanelProductos() {
+            JPanel panel = new JPanel();
+            panel.setLayout(new BorderLayout());
+            panel.setBackground(Color.white);
+            panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Márgenes
         
-        JComboBox<materiaPrima> materiasComboBox = new JComboBox<>(materiasComboBoxModel);
-        JTextField cantidadMateriaField = new JTextField(5);
-        JButton agregarMateriaProductoButton = new JButton("Añadir Materia Prima");
-
-        HashMap<materiaPrima, Integer> materiasPrimasSeleccionadas = new HashMap<>();
-        productosArea = new JTextArea(10, 30);
-        productosArea.setEditable(false);
-        JScrollPane scrollPane = new JScrollPane(productosArea);
-        scrollPane.setPreferredSize(new Dimension(500, 150));
-
-        agregarMateriaProductoButton.addActionListener(e -> {
-            materiaPrima materia = (materiaPrima) materiasComboBox.getSelectedItem();
-            int cantidad = Integer.parseInt(cantidadMateriaField.getText());
-            materiasPrimasSeleccionadas.put(materia, cantidad);
-            cantidadMateriaField.setText("");
-        });
-
-        agregarProductoButton.addActionListener(e -> {
-            String nombre = nombreProductoField.getText();
-            float precio = Float.parseFloat(precioProductoField.getText());
-            producto nuevoProducto = new producto(nombre, precio, new HashMap<>(materiasPrimasSeleccionadas));
-            productos.add(nuevoProducto);
-            productosComboBoxModel.addElement(nuevoProducto);
-            nombreProductoField.setText("");
-            precioProductoField.setText("");
-            materiasPrimasSeleccionadas.clear();
-            actualizarProductos();
-        });
-
-        inputPanel.add(new JLabel("Nombre:"));
-        inputPanel.add(nombreProductoField);
-        inputPanel.add(new JLabel("Precio:"));
-        inputPanel.add(precioProductoField);
-        inputPanel.add(new JLabel("Materia Prima:"));
-        inputPanel.add(materiasComboBox);
-        inputPanel.add(new JLabel("Cantidad:"));
-        inputPanel.add(cantidadMateriaField);
-        inputPanel.add(agregarMateriaProductoButton);
-        inputPanel.add(agregarProductoButton);
-
-        panel.add(inputPanel);
-        panel.add(new JLabel("Productos:"));
-        panel.add(scrollPane);
-
-        return panel;
-    }
+            // Panel de entrada de productos
+            JPanel inputPanel = new JPanel();
+            inputPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10)); // Alineación y espaciado
+            inputPanel.setBackground(Color.white);
+        
+            JTextField nombreProductoField = new JTextField(10);
+            JTextField precioProductoField = new JTextField(10);
+            JButton agregarProductoButton = new JButton("Agregar Producto");
+        
+            productosComboBoxModel = new DefaultComboBoxModel<>();
+            for (producto p : productos) {
+                productosComboBoxModel.addElement(p);
+            }
+            JComboBox<producto> productosComboBox = new JComboBox<>(productosComboBoxModel);
+        
+            JComboBox<materiaPrima> materiasComboBox = new JComboBox<>(materiasComboBoxModel);
+            JTextField cantidadMateriaField = new JTextField(5);
+            JButton agregarMateriaProductoButton = new JButton("Añadir Materia Prima");
+        
+            HashMap<materiaPrima, Integer> materiasPrimasSeleccionadas = new HashMap<>();
+        
+            // Definir el modelo de la tabla
+            String[] columnNames = {"Nombre", "Precio", "Materias Primas"};
+            productosTableModel = new DefaultTableModel(columnNames, 0) {
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return false; // Hacer que las celdas no sean editables
+                }
+            };
+        
+            // Crear la tabla y configurarla
+            productosTable = new JTable(productosTableModel);
+            productosTable.setFont(new Font("SansSerif", Font.PLAIN, 14));
+            productosTable.setRowHeight(25);
+        
+            // Configurar encabezados
+            JTableHeader header = productosTable.getTableHeader();
+            header.setFont(new Font("SansSerif", Font.BOLD, 16));
+        
+            // Ajustar el ancho de las columnas
+            for (int i = 0; i < columnNames.length; i++) {
+                TableColumn column = productosTable.getColumnModel().getColumn(i);
+                column.setPreferredWidth(200);
+            }
+        
+            // Alternar colores de filas
+            productosTable.setFillsViewportHeight(true);
+            productosTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+                @Override
+                public Component getTableCellRendererComponent(JTable table, Object value,
+                                                               boolean isSelected, boolean hasFocus,
+                                                               int row, int column) {
+                    Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                    if (!isSelected) {
+                        if (row % 2 == 0) {
+                            c.setBackground(new Color(240, 240, 240));
+                        } else {
+                            c.setBackground(Color.white);
+                        }
+                    }
+                    return c;
+                }
+            });
+        
+            // Crear el JScrollPane para la tabla
+            JScrollPane tableScrollPane = new JScrollPane(productosTable);
+            tableScrollPane.setPreferredSize(new Dimension(600, 400));
+        
+            agregarMateriaProductoButton.addActionListener(e -> {
+                materiaPrima materia = (materiaPrima) materiasComboBox.getSelectedItem();
+                int cantidad = Integer.parseInt(cantidadMateriaField.getText());
+                materiasPrimasSeleccionadas.put(materia, cantidad);
+                cantidadMateriaField.setText("");
+            });
+        
+            agregarProductoButton.addActionListener(e -> {
+                String nombre = nombreProductoField.getText();
+                float precio = Float.parseFloat(precioProductoField.getText());
+                producto nuevoProducto = new producto(nombre, precio, new HashMap<>(materiasPrimasSeleccionadas));
+                productos.add(nuevoProducto);
+                productosComboBoxModel.addElement(nuevoProducto);
+                nombreProductoField.setText("");
+                precioProductoField.setText("");
+                materiasPrimasSeleccionadas.clear();
+                actualizarProductos();
+            });
+        
+            // Agregar componentes al panel de entrada
+            inputPanel.add(new JLabel("Nombre:"));
+            inputPanel.add(nombreProductoField);
+            inputPanel.add(new JLabel("Precio:"));
+            inputPanel.add(precioProductoField);
+            inputPanel.add(new JLabel("Materia Prima:"));
+            inputPanel.add(materiasComboBox);
+            inputPanel.add(new JLabel("Cantidad:"));
+            inputPanel.add(cantidadMateriaField);
+            inputPanel.add(agregarMateriaProductoButton);
+            inputPanel.add(agregarProductoButton);
+        
+            // Agregar el panel de entrada y la tabla al panel principal
+            panel.add(inputPanel, BorderLayout.NORTH);
+            panel.add(new JLabel("Productos Registrados:"), BorderLayout.CENTER);
+            panel.add(tableScrollPane, BorderLayout.SOUTH);
+        
+            return panel;
+        }
 
     private JTable ordenesTable;
     private DefaultTableModel tableModel;
@@ -283,74 +406,95 @@ public class InterfazUsuario extends JFrame {
         ordenesTable.setRowSorter(sorter);
 
         return panel;
-    }
+        }
 
-    private JPanel crearPanelOptimizacion() {
+        private JPanel crearPanelOptimizacion() {
         JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setLayout(new BorderLayout());
         panel.setBackground(Color.white);
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Márgenes
 
-        JPanel presupuestoPanel = new JPanel();
-        presupuestoPanel.setLayout(new FlowLayout());
-        presupuestoPanel.setPreferredSize(new Dimension(500, 80));
+        JPanel inputPanel = new JPanel();
+        inputPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10)); // Alineación y espaciado
+        inputPanel.setBackground(Color.white);
 
         presupuestoField = new JTextField(10);
+        JButton optimizarButton = new JButton("Optimizar Órdenes");
+
+        inputPanel.add(new JLabel("Presupuesto:"));
+        inputPanel.add(presupuestoField);
+        inputPanel.add(optimizarButton);
+
         resultadoArea = new JTextArea(10, 30);
         resultadoArea.setEditable(false);
+        resultadoArea.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        resultadoArea.setBorder(BorderFactory.createLineBorder(Color.GRAY));
         JScrollPane scrollPane = new JScrollPane(resultadoArea);
-        scrollPane.setPreferredSize(new Dimension(500, 150));
+        scrollPane.setPreferredSize(new Dimension(600, 400));
 
-        JButton optimizarButton = new JButton("Optimizar Órdenes");
-        optimizarButton.addActionListener(e -> optimizarOrdenes());
+        optimizarButton.addActionListener(e -> {
+        optimizarOrdenes();
+        if (!resultadoArea.getText().contains("No se pueden realizar órdenes dentro del presupuesto.")) {
+            int response = JOptionPane.showConfirmDialog(panel, "¿Desea confirmar la producción de las órdenes optimizadas?", "Confirmar Producción", JOptionPane.YES_NO_OPTION);
+            if (response == JOptionPane.YES_OPTION) {
+            confirmarProduccion();
+            }
+        }
+        });
 
-        presupuestoPanel.add(new JLabel("Presupuesto:"));
-        presupuestoPanel.add(presupuestoField);
-        presupuestoPanel.add(optimizarButton);
-
-        panel.add(presupuestoPanel);
-        panel.add(new JLabel("Resultado de Optimización:"));
-        panel.add(scrollPane);
+        panel.add(inputPanel, BorderLayout.NORTH);
+        panel.add(new JLabel("Resultado de Optimización:"), BorderLayout.CENTER);
+        panel.add(scrollPane, BorderLayout.SOUTH);
 
         return panel;
-    }
-
-    private void actualizarMateriasPrimas() {
-        materiasArea.setText("");
-        for (materiaPrima m : materiasPrimas) {
-            materiasArea.append("Nombre: " + m.getNombre() + ", Precio: " + m.getPrecioGramo() + "\n");
         }
-        File materiasFile = new File("datos/materiasPrimas.txt");
-        try (PrintWriter pw = new PrintWriter(new FileOutputStream(materiasFile, false))) {
-            for (materiaPrima m : materiasPrimas) {
-                pw.println(m.getNombre() + "," + m.getPrecioGramo());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Error al guardar materias primas.");
-        }
-    }
 
-    private void actualizarProductos() {
-        productosArea.setText("");
+        private void confirmarProduccion() {
+        List<orden> ordenesSeleccionadas = Optimizer.optimizerOrdenes(ordenes, Float.parseFloat(presupuestoField.getText()));
+        ordenes.removeAll(ordenesSeleccionadas);
+        actualizarOrdenes();
+        JOptionPane.showMessageDialog(this, "Producción confirmada y órdenes eliminadas.", "Producción Confirmada", JOptionPane.INFORMATION_MESSAGE);
+        }
+
+        private void actualizarProductos() {
+        // Limpiar la tabla
+        productosTableModel.setRowCount(0);
+        
+        // Llenar la tabla con los productos actualizados
+        DecimalFormat decimalFormat = new DecimalFormat("#,###");
         for (producto p : productos) {
-            productosArea.append("Nombre: " + p.getNombre() + ", Precio: " + p.getPrecio() + "\n");
+            StringBuilder materiasPrimasStr = new StringBuilder();
+            for (materiaPrima m : p.getMateriasPrimas().keySet()) {
+            if (materiasPrimasStr.length() > 0) {
+                materiasPrimasStr.append(", ");
+            }
+            materiasPrimasStr.append(m.getNombre())
+                .append(": ")
+                .append(p.getMateriasPrimas().get(m));
+            }
+        
+            // Agregar producto a la tabla
+            productosTableModel.addRow(new Object[]{p.getNombre(), '$' + decimalFormat.format(p.getPrecio()), materiasPrimasStr.toString()});
         }
+        
+        // Guardar productos en archivo
         File productosFile = new File("datos/productos.txt");
         try (PrintWriter pw = new PrintWriter(new FileOutputStream(productosFile, false))) {
             for (producto p : productos) {
-                pw.print(p.getNombre() + "," + p.getPrecio());
-                for (materiaPrima m : p.getMateriasPrimas().keySet()) {
-                    pw.print("," + m.getNombre() + ":" + Integer.toString(p.getMateriasPrimas().get(m)));
-                }
-                pw.println();
+            pw.print(p.getNombre() + "," + p.getPrecio());
+            for (materiaPrima m : p.getMateriasPrimas().keySet()) {
+                pw.print("," + m.getNombre() + ":" + p.getMateriasPrimas().get(m));
+            }
+            pw.println();
             }
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Error al guardar productos.");
         }
-    }
+        }
+        
 
-    private void actualizarOrdenes() {
+        private void actualizarOrdenes() {
         // Limpiar el modelo de la tabla
         tableModel.setRowCount(0);
         DecimalFormat decimalFormat = new DecimalFormat("#,###");

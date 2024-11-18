@@ -1,3 +1,4 @@
-Sillón,257398.0,Hierro:20,Lana:300,Madera:100
-Cama,2593838.0,Hierro:150,Lana:1000,Madera:500
+Sillón,257398.0,Madera:100,Hierro:20,Lana:300
+Cama,2593838.0,Madera:500,Hierro:150,Lana:1000
 Mesa de centro,430700.0,Cobre:8,Madera:20
+Comedor,1200000.0,Madera:30,Hierro:18
