@@ -1,6 +1,13 @@
 package PMCJAVA;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableColumn;
 
+import java.text.DecimalFormat;
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.BufferedReader;
@@ -12,6 +19,9 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import PMCJAVA.Optimizer;
+
+import javax.swing.table.TableRowSorter;
 
 public class InterfazUsuario extends JFrame {
 
@@ -174,41 +184,103 @@ public class InterfazUsuario extends JFrame {
         return panel;
     }
 
+    private JTable ordenesTable;
+    private DefaultTableModel tableModel;
+
     private JPanel crearPanelOrdenes() {
         JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setLayout(new BorderLayout());
         panel.setBackground(Color.white);
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Márgenes
 
+        // Panel de entrada de órdenes
         JPanel inputPanel = new JPanel();
-        inputPanel.setLayout(new FlowLayout());
+        inputPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10)); // Alineación y espaciado
+        inputPanel.setBackground(Color.white);
 
         JComboBox<producto> productosComboBox = new JComboBox<>(productosComboBoxModel);
         JTextField cantidadOrdenField = new JTextField(5);
         JButton agregarOrdenButton = new JButton("Agregar Orden");
 
-        ordenesArea = new JTextArea(10, 30);
-        ordenesArea.setEditable(false);
-        JScrollPane scrollPane = new JScrollPane(ordenesArea);
-        scrollPane.setPreferredSize(new Dimension(500, 150));
+        // Definir el modelo de la tabla
+        String[] columnNames = {"Producto", "Cantidad", "Costo Total"};
+        tableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // Hacer que las celdas no sean editables
+            }
+        };
 
-        agregarOrdenButton.addActionListener(e -> {
-            producto prod = (producto) productosComboBox.getSelectedItem();
-            int cantidad = Integer.parseInt(cantidadOrdenField.getText());
-            orden nuevaOrden = new orden(prod, cantidad);
-            ordenes.add(nuevaOrden);
-            actualizarOrdenes();
-            cantidadOrdenField.setText("");
+        // Crear la tabla y configurarla
+        ordenesTable = new JTable(tableModel);
+        ordenesTable.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        ordenesTable.setRowHeight(25);
+
+        // Configurar encabezados
+        JTableHeader header = ordenesTable.getTableHeader();
+        header.setFont(new Font("SansSerif", Font.BOLD, 16));
+
+        // Ajustar el ancho de las columnas
+        for (int i = 0; i < columnNames.length; i++) {
+            TableColumn column = ordenesTable.getColumnModel().getColumn(i);
+            column.setPreferredWidth(200);
+        }
+
+        // Alternar colores de filas
+        ordenesTable.setFillsViewportHeight(true);
+        ordenesTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                                                        boolean isSelected, boolean hasFocus,
+                                                        int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (!isSelected) {
+                    if (row % 2 == 0) {
+                        c.setBackground(new Color(240, 240, 240));
+                    } else {
+                        c.setBackground(Color.white);
+                    }
+                }
+                return c;
+            }
         });
 
+        // Crear el JScrollPane para la tabla
+        JScrollPane tableScrollPane = new JScrollPane(ordenesTable);
+        tableScrollPane.setPreferredSize(new Dimension(600, 400));
+
+        // Acción del botón para agregar una orden
+        agregarOrdenButton.addActionListener(e -> {
+            producto prod = (producto) productosComboBox.getSelectedItem();
+            try {
+                int cantidad = Integer.parseInt(cantidadOrdenField.getText());
+                if (cantidad <= 0) {
+                    JOptionPane.showMessageDialog(panel, "La cantidad debe ser un número positivo.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                orden nuevaOrden = new orden(prod, cantidad);
+                ordenes.add(nuevaOrden);
+                actualizarOrdenes();
+                cantidadOrdenField.setText("");
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(panel, "Por favor, ingresa una cantidad válida.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        // Agregar componentes al panel de entrada
         inputPanel.add(new JLabel("Producto:"));
         inputPanel.add(productosComboBox);
         inputPanel.add(new JLabel("Cantidad:"));
         inputPanel.add(cantidadOrdenField);
         inputPanel.add(agregarOrdenButton);
 
-        panel.add(inputPanel);
-        panel.add(new JLabel("Órdenes:"));
-        panel.add(scrollPane);
+        // Agregar el panel de entrada y la tabla al panel principal
+        panel.add(inputPanel, BorderLayout.NORTH);
+        panel.add(new JLabel("Órdenes Registradas:"), BorderLayout.CENTER);
+        panel.add(tableScrollPane, BorderLayout.SOUTH);
+
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(tableModel);
+        ordenesTable.setRowSorter(sorter);
 
         return panel;
     }
@@ -279,11 +351,23 @@ public class InterfazUsuario extends JFrame {
     }
 
     private void actualizarOrdenes() {
-        ordenesArea.setText("");
+        // Limpiar el modelo de la tabla
+        tableModel.setRowCount(0);
+        DecimalFormat decimalFormat = new DecimalFormat("#,###");
+
         for (orden o : ordenes) {
-            ordenesArea.append("Producto: " + o.getProducto().getNombre() + ", Cantidad: " + o.getCantidad() +
-                               ", Total: " + o.getTotal() + "\n");
+            // Formatear el costo total
+            String costoFormateado = "$" + decimalFormat.format(o.getTotal());
+
+            // Añadir una nueva fila al modelo
+            tableModel.addRow(new Object[]{
+                o.getProducto().getNombre(),
+                o.getCantidad(),
+                costoFormateado
+            });
         }
+
+        // Guardar en archivo (mantén esta parte si lo necesitas)
         File ordenesFile = new File("datos/ordenes.txt");
         try (PrintWriter pw = new PrintWriter(new FileOutputStream(ordenesFile, false))) {
             for (orden o : ordenes) {
@@ -295,34 +379,26 @@ public class InterfazUsuario extends JFrame {
         }
     }
 
+    
+
     private void optimizarOrdenes() {
         float presupuesto = Float.parseFloat(presupuestoField.getText());
-        resultadoArea.setText("Optimizando con presupuesto: " + presupuesto + "\n");
+        DecimalFormat decimalFormat = new DecimalFormat("#, ###"); 
+        resultadoArea.setText("Optimizando con presupuesto: $" + decimalFormat.format(presupuesto) + "\n");
 
-        List<orden> ordenesSeleccionadas = maximizarIngresosConPresupuesto(ordenes, presupuesto);
+               
+        List<orden> ordenesSeleccionadas = Optimizer.optimizerOrdenes(ordenes, presupuesto);
         if (!ordenesSeleccionadas.isEmpty()) {
             for (orden o : ordenesSeleccionadas) {
                 resultadoArea.append("Orden: Producto: " + o.getProducto().getNombre() + 
-                                     ", Cantidad: " + o.getCantidad() + ", Total: " + o.getTotal() + "\n");
+                                     ", Cantidad: " + o.getCantidad() + 
+                                     ", Ingreso Total: $" + decimalFormat.format(o.getIngreso()) + "\n");
             }
         } else {
             resultadoArea.append("No se pueden realizar órdenes dentro del presupuesto.\n");
         }
     }
 
-    private List<orden> maximizarIngresosConPresupuesto(List<orden> ordenes, float presupuesto) {
-        List<orden> seleccionadas = new ArrayList<>();
-        float total = 0;
-
-        for (orden o : ordenes) {
-            if (total + o.getTotal() <= presupuesto) {
-                seleccionadas.add(o);
-                total += o.getTotal();
-            }
-        }
-
-        return seleccionadas;
-    }
 
     private void loadInformation() {
         // Materias primas

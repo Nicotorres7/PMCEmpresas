@@ -1,3 +1,6 @@
 Sillón,150
 Cama,400
 Cama,720
+Sillón,10
+Mesa de centro,30
+Cama,15
