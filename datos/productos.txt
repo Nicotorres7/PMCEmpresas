@@ -1,4 +1,20 @@
-Sillón,257398.0,Madera:100,Hierro:20,Lana:300
-Cama,2593838.0,Madera:500,Hierro:150,Lana:1000
+Sillón,257398.0,Lana:300,Madera:100,Hierro:20
+Cama,2593838.0,Lana:1000,Madera:500,Hierro:150
 Mesa de centro,430700.0,Cobre:8,Madera:20
 Comedor,1200000.0,Madera:30,Hierro:18
+Silla,350000.0,Lana:50,Madera:15,Hierro:8
+Escritorio,600000.0,Lana:100,Madera:40,Hierro:10
+Estantería,450000.0,Madera:60,Hierro:25
+Lámpara,120000.0,Cobre:4,Hierro:10
+Lámpara de mesa,220000.0,Cobre:2,Madera:5,Hierro:3
+Cocina,1500000.0,Madera:300,Hierro:400
+Biblioteca,900000.0,Lana:50,Madera:80,Hierro:15
+Tocador,650000.0,Lana:150,Madera:50,Hierro:10
+Cuna,850000.0,Lana:180,Madera:120,Hierro:30
+Vitrina,700000.0,Madera:90,Hierro:20
+Mueble TV,750000.0,Lana:50,Madera:100,Hierro:40
+Armario,1100000.0,Madera:200,Hierro:50
+Zapatero,300000.0,Madera:40,Hierro:10
+Silla de oficina,250000.0,Lana:30,Madera:15,Hierro:5
+Mesa de noche,350000.0,Lana:50,Madera:25,Hierro:8
+Mueble de baño,400000.0,Madera:60,Hierro:15

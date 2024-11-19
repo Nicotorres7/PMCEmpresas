@@ -46,6 +46,12 @@ public class InterfazUsuario extends JFrame {
 
         setTitle("Gestión de Producción");
         setSize(1000, 600);
+
+        // Añadir logo
+        JLabel logoLabel = new JLabel(new ImageIcon("logo/logoEasyFlow.jpg"));
+        logoLabel.setHorizontalAlignment(JLabel.CENTER);
+        add(logoLabel, BorderLayout.NORTH);
+
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         getContentPane().setBackground(Color.decode("#f0f8ff"));

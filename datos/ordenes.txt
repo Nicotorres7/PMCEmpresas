@@ -3,3 +3,21 @@ Cama,400
 Cama,720
 Sillón,10
 Cama,15
+Mesa de centro,50
+Comedor,60
+Silla,80
+Escritorio,120
+Estantería,75
+Lámpara,200
+Lámpara de mesa,180
+Cocina,20
+Biblioteca,30
+Tocador,45
+Cuna,60
+Vitrina,25
+Mueble TV,40
+Armario,10
+Zapatero,150
+Silla de oficina,30
+Mesa de noche,100
+Mueble de baño,50
